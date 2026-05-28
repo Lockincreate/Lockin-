@@ -1,0 +1,63 @@
+Yep — here’s a minimal HTML page that joins a LiveKit room using the token you generate.
+
+1. `index.html`
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>LiveKit Call</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: system-ui; background: #0a0a0a; color: #fff; text-align: center; padding: 40px; }
+    video { width: 45%; margin: 10px; border-radius: 12px; background: #000; }
+    button { padding: 12px 20px; border: none; border-radius: 8px; background: #2563eb; color: white; font-size: 16px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h2>LiveKit App-to-App Call</h2>
+  <div id="videos"></div>
+  <button id="joinBtn">Join Room</button>
+
+  <script type="module">
+    import { Room, RoomEvent, createLocalAudioTrack, createLocalVideoTrack } from 'https://cdn.jsdelivr.net/npm/livekit-client@2.5.0/dist/livekit-client.esm.js';
+
+    const LIVEKIT_URL = 'wss://YOUR-PROJECT.livekit.cloud'; // from LiveKit Cloud dashboard
+    const TOKEN = 'PASTE_TOKEN_HERE'; // output from genToken.js
+
+    const room = new Room();
+    const videosDiv = document.getElementById('videos');
+
+    room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+      if (track.kind === 'video' || track.kind === 'audio') {
+        const el = track.attach();
+        videosDiv.appendChild(el);
+      }
+    });
+
+    document.getElementById('joinBtn').onclick = async () => {
+      await room.connect(LIVEKIT_URL, TOKEN);
+      
+      // Publish your camera + mic
+      await room.localParticipant.enableCameraAndMicrophone();
+
+      // Show your own video
+      room.localParticipant.videoTrackPublications.forEach(pub => {
+        const el = pub.track.attach();
+        videosDiv.appendChild(el);
+      });
+    };
+  </script>
+</body>
+</html>
+2. How to use it
+1. Replace `LIVEKIT_URL` with your LiveKit Cloud URL - looks like `wss://your-project.livekit.cloud`
+2. Replace `TOKEN` with the JWT you got from running `node genToken.js`
+3. Open the HTML file on 2 devices/browsers, both using tokens for the same `roomName`
+4. Hit *Join Room* on both. You’ll see video/audio connect P2P through LiveKit
+
+3. Important notes
+- Keep this for testing only. In prod, you generate the token on your backend and fetch it via API. Never expose `API_SECRET` in the browser.
+- If you want 0 mobile data usage, both devices must be on WiFi. Turn off mobile data to test.
+- Free LiveKit Cloud tier gives you 10k participant-minutes/month. After that it charges $0.005/min.
+
+Want me to give you the http://Node.js backend endpoint that generates and returns the token on demand, so you don’t have to paste it manually?
