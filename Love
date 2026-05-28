@@ -1,0 +1,23 @@
+You mean *API calls* to test if GitHub is working, right?
+
+Fastest test from your phone/terminal:
+
+*1. Check basic API access*
+curl -i https://api.github.com/user
+
+This should return `401 Unauthorized` - that’s normal. It means the API is up, you just didn’t send a token.
+
+*2. Test with your account*
+Generate a Personal Access Token first: GitHub menu → *Settings* → *Developer settings* → *Personal access tokens* → *Tokens (classic)* → Generate new token.
+
+Then run:
+curl -H "Authorization: token YOUR_TOKEN" https://api.github.com/user
+
+If it returns your user info with `"login": "Lockincreate"`, auth + API calls are working.
+
+*3. Test repo access*
+curl -H "Authorization: token YOUR_TOKEN" https://api.github.com/repos/Lockincreate/REPO_NAME
+
+Replace `REPO_NAME` with one of your repos. 200 OK = all good.
+
+If you meant phone calls or something else, let me know what "calls" you’re trying to test and I’ll give you the steps.
