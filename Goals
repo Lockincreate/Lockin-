@@ -1,0 +1,68 @@
+Got you. Here’s a basic http://Node.js + Express server that uses your GitHub App details for OAuth login.
+
+Replace the `CLIENT_ID` and `CLIENT_SECRET` with the ones GitHub gives you after you create the app.
+const express = require('express');
+const axios = require('axios');
+const app = express();
+
+// --- Your GitHub App Details ---
+const CLIENT_ID = 'Ov23liXXXXXXXXXXXXXXXX'; // Paste Client ID from GitHub App settings
+const CLIENT_SECRET = 'your_client_secret_here'; // Paste Client Secret
+const CALLBACK_URL = 'http://localhost:3000/callback';
+
+// 1. Route to start OAuth login
+app.get('/login', (req, res) => {
+  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${CALLBACK_URL}&scope=user:email`;
+  res.redirect(githubAuthUrl);
+});
+
+// 2. Callback route GitHub redirects to after user approves
+app.get('/callback', async (req, res) => {
+  const code = req.query.code;
+  
+  try {
+    // Exchange code for access token
+    const tokenResponse = await axios.post(
+      'https://github.com/login/oauth/access_token',
+      {
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        code: code,
+        redirect_uri: CALLBACK_URL
+      },
+      { headers: { accept: 'application/json' } }
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+
+    // Get user info with the token
+    const userResponse = await axios.get('https://api.github.com/user', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+
+    res.json({
+      message: 'Logged in successfully',
+      user: userResponse.data,
+      token: accessToken
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 3. Start server
+app.listen(3000, () => {
+  console.log('Server running on http://localhost:3000');
+  console.log('Go to http://localhost:3000/login to test');
+});
+*How to run it:*
+1. `npm init -y`
+2. `npm install express axios`
+3. Paste your `CLIENT_ID` and `CLIENT_SECRET` from GitHub > Settings > Developer Settings > GitHub Apps > Shabbapp
+4. Run: `node index.js`
+5. Open `http://localhost:3000/login` in your browser
+
+This will redirect you to GitHub, ask you to authorize, then send you back to `/callback` with your user data.
+
+Want me to convert this to a Python Flask version instead, or add repo access scopes?
