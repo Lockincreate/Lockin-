@@ -1,0 +1,27 @@
+Your GitHub Actions workflow failed on the *build* step with exit code 1. The http://Node.js 20 deprecation warning isn’t the cause of the failure - it’s just a warning.
+
+*What happened:*
+1. *Build failed*: `Process completed with exit code 1` means your `dotnet build` or `dotnet publish` command failed. This is usually a code compile error, missing dependency, or wrong .NET version.
+2. *Node.js warning*: GitHub is warning that actions/cache@v3, actions/checkout@v4, actions/setup-dotnet@v4 are running on http://Node.js 20, which will be removed Sept 16, 2026. Update those actions to the latest versions to fix this.
+
+*How to fix the actual failure:*
+
+1. Click into the failed "build" job in GitHub Actions
+2. Expand the "Run build and publish" or "dotnet build" step
+3. Look at the red error logs above exit code 1 - that’s the real error
+
+Common causes for http://ASP.NET Core:
+- *Wrong .NET SDK version*: Check your `global.json` or `setup-dotnet` action version vs what the project needs
+- *Missing NuGet packages*: Run `dotnet restore` failed
+- *Project won’t compile*: Build locally with `dotnet build` to reproduce
+- *Wrong project path*: The `project-path` in your yml might be incorrect
+
+*Quick fix for the yml:*
+Make sure your workflow uses a .NET version that matches your project:
+- name: Setup .NET
+  uses: actions/setup-dotnet@v4
+  with:
+    dotnet-version: '8.0.x'  # change to 6.0.x, 7.0.x, etc. to match your project
+
+
+Want me to check the exact error if you paste the build log output? Or share your `azure-webapps-dotnet-core.yml` and I’ll spot the issue.
